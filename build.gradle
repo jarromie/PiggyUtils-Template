@@ -1,0 +1,101 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'net.researchgate.release' version '2.8.1'
+}
+
+allprojects {
+    repositories {
+        mavenLocal()
+        maven {
+            url = 'https://repo.runelite.net'
+        }
+        mavenCentral()
+        jcenter()
+    }
+
+    def runeLiteVersion = '1.10.22'
+
+    plugins.withType(JavaPlugin) {
+        dependencies {
+            compileOnly 'org.projectlombok:lombok:1.18.20'
+            annotationProcessor 'org.projectlombok:lombok:1.18.20'
+            compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
+            testImplementation 'junit:junit:4.12'
+            testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion
+            testImplementation group: 'net.runelite', name: 'jshell', version: runeLiteVersion
+        }
+    }
+}
+
+dependencies {
+    compileOnly project(path: 'EthansApi')
+    compileOnly project(path: 'PiggyUtils')
+    compileOnly project(path: 'NewPlugin')
+    testImplementation project(path: 'NewPlugin')
+}
+
+sourceSets {
+
+    main {
+
+        java {
+            srcDir "src"
+        }
+
+    }
+}
+
+group = 'com.jarromie'
+version = '1.1.4'
+sourceCompatibility = "11"
+
+task FatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'com.jarromie.NewPlugin.NewPlugin'
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+task PiggyJar(type: Jar) {
+    manifest {
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+subprojects {
+    tasks.withType(Jar) {
+        doLast {
+            copy {
+                from("./build/libs/")
+                into("../release/")
+            }
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username 'admin'
+                password 'password'
+            }
+            url "http://baseUrl/artifactory/libs-release-local"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+targetCompatibility = JavaVersion.VERSION_11

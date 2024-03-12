@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    compileOnly project(path: "EthansApi")
+    compileOnly project(path: "PiggyUtils")
+}
+
+sourceSets {
+
+    main {
+
+        java {
+            srcDir "src"
+        }
+
+    }
+}
+
+group 'com.jarromie'
+version '1.1.4'
+
+test {
+    useJUnitPlatform()
+}
+
+task PiggyJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'com.example.Main'
+    }
+//    baseName = 'autorogues'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+tasks.register("prepareKotlinBuildScriptModel"){}
